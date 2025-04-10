@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Book List</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="mt-2">Book List</h1>
+
+    <div class="form-row mb-3">
+        <div class="col">
+            <input type="text" class="form-control" id="titleFilter" placeholder="Title">
+        </div>
+        <div class="col">
+            <input type="text" class="form-control" id="brandFilter" placeholder="Brand">
+        </div>
+        <div class="col">
+            <input type="number" class="form-control" id="yearFilter" placeholder="Year">
+        </div>
+        <div class="col">
+            <select class="form-control" id="pageSizeSelect" onchange="changePageSize()">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+            </select>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-primary" onclick="applyFilters()">Filter</button>
+            <button type="button" class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Vendor Code</th>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Brand</th>
+            <th>Stock</th>
+            <th>Price</th>
+        </tr>
+        </thead>
+        <tbody id="bookTableBody">
+        </tbody>
+    </table>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination" id="pagination"></ul>
+    </nav>
+</div>
+
+<script src="static/js/book-list_old.js"></script>
+</body>
+</html>
