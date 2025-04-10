@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS books;
+
+CREATE TABLE books (
+   id BIGSERIAL PRIMARY KEY,
+   vendor_code TEXT NOT NULL,
+   title TEXT NOT NULL,
+   year INT NOT NULL,
+   brand TEXT NOT NULL,
+   stock INT NOT NULL,
+   price DOUBLE PRECISION NOT NULL
+);

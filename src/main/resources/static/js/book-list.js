@@ -3,43 +3,61 @@ var pageSize = 10;
 var titleFilter = "";
 var brandFilter = "";
 var yearFilter = "";
-var currentBookId; // Variable to hold the ID of the currently selected book for edit/delete
 
 document.addEventListener("DOMContentLoaded", function() {
     loadBooks();
 
-    // Show modal for adding book
-    document.getElementById('openCreateModal').addEventListener('click', function() {
-        $('#createModal').modal('show');
-    });
-
-    // Handle book creation
-    document.getElementById("createBookForm").addEventListener("submit", function(event) {
+    document.getElementById("bookForm").addEventListener("submit", function(event) {
         event.preventDefault();
-        createBook();
+        saveBook();
     });
 
-    // Handle book editing
-    document.getElementById("editBookForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-        updateBook();
-    });
-
-    // Handle delete confirmation
-    document.getElementById("confirmDelete").addEventListener("click", function() {
-        deleteBook(currentBookId);
-    });
+    if (userRoles.includes("ROLE_ADMIN")) {
+        document.getElementById("addBookButton").style.display = "block";
+    } else {
+        document.getElementById("addBookButton").style.display = "none";
+    }
 });
 
-// Load books from the server
+function applyFilters() {
+    titleFilter = document.getElementById("titleFilter").value;
+    brandFilter = document.getElementById("brandFilter").value;
+    yearFilter = document.getElementById("yearFilter").value;
+    currentPage = 0;
+    loadBooks();
+}
+
+function clearFilters() {
+    document.getElementById("titleFilter").value = "";
+    document.getElementById("brandFilter").value = "";
+    document.getElementById("yearFilter").value = "";
+    titleFilter = "";
+    brandFilter = "";
+    yearFilter = "";
+    currentPage = 0;
+    loadBooks();
+}
+
+function changePageSize() {
+    pageSize = parseInt(document.getElementById("pageSizeSelect").value, 10);
+    currentPage = 0;
+    loadBooks();
+}
+
 async function loadBooks() {
-    var url = `/api/books?page=${currentPage}&size=${pageSize}&title=${titleFilter}&brand=${brandFilter}&year=${yearFilter}`;
+    var url = "/api/books?page=" + currentPage + "&size=" + pageSize;
+    if (titleFilter) {
+        url += "&title=" + titleFilter;
+    }
+    if (brandFilter) {
+        url += "&brand=" + brandFilter;
+    }
+    if (yearFilter) {
+        url += "&year=" + yearFilter;
+    }
 
     try {
         const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
         const data = await response.json();
         populateTable(data.content);
         populatePagination(data.totalPages, data.number);
@@ -48,123 +66,237 @@ async function loadBooks() {
     }
 }
 
-// Populate the table with book data
 function populateTable(books) {
     var tableBody = document.getElementById("bookTableBody");
     tableBody.innerHTML = "";
 
-    for (var book of books) {
-        var row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${book.id}</td>
-            <td>${book.vendorCode}</td>
-            <td>${book.title}</td>
-            <td>${book.year}</td>
-            <td>${book.brand}</td>
-            <td>${book.stock}</td>
-            <td>${book.price}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="showEditModal(${book.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="confirmDeleteBook(${book.id})">Delete</button>
-            </td>
-        `;
+    for (let i = 0; i < books.length; i++) {
+        let book = books[i];
+        let row = document.createElement("tr");
+
+        let idCell = document.createElement("td");
+        idCell.textContent = book.id;
+        row.appendChild(idCell);
+
+        let vendorCodeCell = document.createElement("td");
+        vendorCodeCell.textContent = book.vendorCode;
+        row.appendChild(vendorCodeCell);
+
+        let titleCell = document.createElement("td");
+        titleCell.textContent = book.title;
+        row.appendChild(titleCell);
+
+        let yearCell = document.createElement("td");
+        yearCell.textContent = book.year;
+        row.appendChild(yearCell);
+
+        let brandCell = document.createElement("td");
+        brandCell.textContent = book.brand;
+        row.appendChild(brandCell);
+
+        let stockCell = document.createElement("td");
+        stockCell.textContent = book.stock;
+        row.appendChild(stockCell);
+
+        let priceCell = document.createElement("td");
+        priceCell.textContent = book.price;
+        row.appendChild(priceCell);
+
+        if (userRoles.includes("ROLE_ADMIN")) {
+            let actionsCell = document.createElement("td");
+
+            let editButton = createButton("Edit", "btn-primary", (function(currentBook) {
+                return function() {
+                    openEditModal(currentBook);
+                };
+            })(book));
+
+            let deleteButton = createButton("Delete", "btn-danger", (function(currentBook) {
+                return function() {
+                    deleteBook(currentBook.id);
+                };
+            })(book));
+
+            actionsCell.appendChild(editButton);
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
+        }
+
         tableBody.appendChild(row);
     }
 }
 
-// Create a new book
-async function createBook() {
-    var newBook = {
-        vendorCode: document.getElementById("createVendorCode").value,
-        title: document.getElementById("createTitle").value,
-        year: parseInt(document.getElementById("createYear").value),
-        brand: document.getElementById("createBrand").value,
-        stock: parseInt(document.getElementById("createStock").value),
-        price: parseFloat(document.getElementById("createPrice").value)
+
+function createButton(text, className, clickHandler) {
+    var button = document.createElement("button");
+    button.textContent = text;
+    button.className = "btn " + className + " btn-sm ml-1";
+    button.addEventListener("click", clickHandler);
+    return button;
+}
+
+function populatePagination(totalPages, currentPage) {
+    var pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    var prevItem = document.createElement("li");
+    prevItem.className = "page-item";
+    var prevLink = document.createElement("a");
+    prevLink.className = "page-link";
+    prevLink.textContent = "Previous";
+    prevLink.href = "#";
+
+    if (currentPage === 0) {
+        prevItem.classList.add("disabled");
+    } else {
+        prevLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            goToPage(currentPage - 1);
+        });
+    }
+
+    prevItem.appendChild(prevLink);
+    pagination.appendChild(prevItem);
+
+    for (var i = 0; i < totalPages; i++) {
+        var pageItem = document.createElement("li");
+        pageItem.className = "page-item";
+        var pageLink = document.createElement("a");
+        pageLink.className = "page-link";
+        pageLink.textContent = (i + 1);
+        pageLink.href = "#";
+
+        if (i === currentPage) {
+            pageItem.classList.add("active");
+        } else {
+            (function(pageNum) {
+                pageLink.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    goToPage(pageNum);
+                });
+            })(i);
+        }
+
+        pageItem.appendChild(pageLink);
+        pagination.appendChild(pageItem);
+    }
+
+    var nextItem = document.createElement("li");
+    nextItem.className = "page-item";
+    var nextLink = document.createElement("a");
+    nextLink.className = "page-link";
+    nextLink.textContent = "Next";
+    nextLink.href = "#";
+
+    if (currentPage === totalPages - 1) {
+        nextItem.classList.add("disabled");
+    } else {
+        nextLink.addEventListener("click", function(e) {
+            e.preventDefault();
+            goToPage(currentPage + 1);
+        });
+    }
+
+    nextItem.appendChild(nextLink);
+    pagination.appendChild(nextItem);
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadBooks();
+}
+
+async function saveBook() {
+    var id = document.getElementById("id").value;
+    var vendorCode = document.getElementById("vendorCode").value;
+    var title = document.getElementById("bookTitle").value;
+    var year = document.getElementById("year").value;
+    var brand = document.getElementById("brand").value;
+    var stock = document.getElementById("stock").value;
+    var price = document.getElementById("price").value;
+
+    var bookData = {
+        vendorCode: vendorCode,
+        title: title,
+        year: year,
+        brand: brand,
+        stock: stock,
+        price: price
     };
 
+    var method = 'POST';
+    var url = '/api/books';
+
+    if (id) {
+        method = 'PUT';
+        url += '/' + id;
+    }
+
     try {
-        const response = await fetch("/api/books", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newBook)
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bookData)
         });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+
+        if (response.ok) {
+            closeModal();
+            loadBooks();
+        } else {
+            console.error('Error saving book:', response.status);
         }
-        $('#createModal').modal('hide'); // Hide the modal
-        loadBooks(); // Refresh the book list
     } catch (error) {
-        alert("Error creating book: " + error.message);
+        console.error('Error saving book:', error);
     }
 }
 
-// Show the edit modal
-function showEditModal(bookId) {
-    currentBookId = bookId; // Store the ID to use in update
-    // Load the book data and populate the edit form
-    // Assume an API endpoint returns the book data for this ID
-    fetch(`/api/books/${bookId}`)
-        .then(response => response.json())
-        .then(book => {
-            document.getElementById("editVendorCode").value = book.vendorCode;
-            document.getElementById("editTitle").value = book.title;
-            document.getElementById("editYear").value = book.year;
-            document.getElementById("editBrand").value = book.brand;
-            document.getElementById("editStock").value = book.stock;
-            document.getElementById("editPrice").value = book.price;
-            $('#editModal').modal('show'); // Show the edit modal
-        });
-}
-
-// Update the book information
-async function updateBook() {
-    var updatedBook = {
-        id: currentBookId,
-        vendorCode: document.getElementById("editVendorCode").value,
-        title: document.getElementById("editTitle").value,
-        year: parseInt(document.getElementById("editYear").value),
-        brand: document.getElementById("editBrand").value,
-        stock: parseInt(document.getElementById("editStock").value),
-        price: parseFloat(document.getElementById("editPrice").value)
-    };
-
-    try {
-        const response = await fetch(`/api/books/${currentBookId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedBook)
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        $('#editModal').modal('hide'); // Hide the modal
-        loadBooks(); // Refresh the book list
-    } catch (error) {
-        alert("Error updating book: " + error.message);
-    }
-}
-
-// Confirm delete action
-function confirmDeleteBook(bookId) {
-    currentBookId = bookId; // Store the ID for deletion confirmation
-    $('#deleteModal').modal('show'); // Show the delete confirmation modal
-}
-
-// Delete a book
 async function deleteBook(id) {
-    try {
-        const response = await fetch(`/api/books/${id}`, {
-            method: 'DELETE'
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    if (confirm("Are you sure you want to delete this book?")) {
+        try {
+            const response = await fetch('/api/books/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                loadBooks();
+            } else {
+                console.error('Error deleting book:', response.status);
+            }
+        } catch (error) {
+            console.error('Error deleting book:', error);
         }
-        $('#deleteModal').modal('hide'); // Hide the modal
-        loadBooks(); // Refresh the book list
-    } catch (error) {
-        alert("Error deleting book: " + error.message);
     }
 }
 
-// Add additional functions here if you need filtering or pagination...
+function openEditModal(book) {
+    document.getElementById("id").value = book.id;
+    document.getElementById("vendorCode").value = book.vendorCode;
+    document.getElementById("bookTitle").value = book.title;
+    document.getElementById("year").value = book.year;
+    document.getElementById("brand").value = book.brand;
+    document.getElementById("stock").value = book.stock;
+    document.getElementById("price").value = book.price;
+
+    $('#bookModal').modal('show');
+}
+
+function openAddModal() {
+    document.getElementById("id").value = "";
+    document.getElementById("vendorCode").value = "";
+    document.getElementById("bookTitle").value = "";
+    document.getElementById("year").value = "";
+    document.getElementById("brand").value = "";
+    document.getElementById("stock").value = "";
+    document.getElementById("price").value = "";
+
+    $('#bookModal').modal('show');
+}
+
+function closeModal() {
+    $('#bookModal').modal('hide');
+}

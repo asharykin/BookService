@@ -1,0 +1,22 @@
+INSERT INTO books (vendor_code, title, year, brand, stock, price)
+VALUES
+('VG001', 'The Great Gatsby', 2023, 'Penguin', 50, 19.99),
+('HC002', '1984', 2022, 'HarperCollins', 30, 25.50),
+('SS003', 'To Kill a Mockingbird', 2021, 'Simon & Schuster', 20, 14.99),
+('RH004', 'Pride and Prejudice', 2020, 'Random House', 15, 29.99),
+('MC005', 'Moby Dick', 2019, 'Macmillan', 10, 34.99),
+('HC006', 'The Catcher in the Rye', 2023, 'Hachette', 25, 22.50),
+('SC007', 'The Little Prince', 2020, 'Scholastic', 40, 15.75),
+('VG008', 'Animal Farm', 2021, 'Penguin', 100, 9.99),
+('HC009', 'War and Peace', 2018, 'HarperCollins', 5, 45.00),
+('RH010', 'Brave New World', 2022, 'Random House', 60, 19.95),
+('OB011', 'Dune', 2023, 'Orbit', 45, 17.50),
+('TO012', 'The Left Hand of Darkness', 2020, 'Tor', 35, 12.99),
+('VIK013', 'The Road', 2019, 'Viking', 20, 27.00),
+('GP014', 'The Master and Margarita', 2021, 'Grove Press', 15, 22.00),
+('VG015', 'The Bell Jar', 2020, 'Penguin', 8, 33.75),
+('BA016', 'The Alchemist', 2018, 'Bantam', 12, 39.99),
+('AT017', 'The Color Purple', 2021, 'Atria', 100, 14.49),
+('DO018', 'Fahrenheit 451', 2022, 'Doubleday', 50, 18.25),
+('KN019', 'Beloved', 2023, 'Knopf', 18, 30.00),
+('LB020', 'The Road to Serfdom', 2019, 'Little, Brown', 28, 23.80);
