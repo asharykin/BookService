@@ -18,7 +18,7 @@ public class BookRestController {
     private final BookService bookService;
 
     @GetMapping
-    public Page<BookDTO> getAllBooks(
+    public Page<BookDTO> getBooks(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "title", required = false) String title,

@@ -17,19 +17,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/books/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/books").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/books/{id}").hasRole("ADMIN")
-                        .requestMatchers("/api/books").hasRole("ADMIN")
-                        .requestMatchers("/api/books/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .defaultSuccessUrl("/books", true)
-                        .permitAll()
-                );
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/books/**").hasAnyRole("USER", "ADMIN")
+                    .requestMatchers("/api/books").hasAnyRole("USER", "ADMIN")
+                    .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                    .defaultSuccessUrl("/books", true)
+                    .permitAll()
+            );
         return http.build();
     }
 
