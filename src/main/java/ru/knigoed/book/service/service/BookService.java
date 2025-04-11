@@ -21,25 +21,9 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
 
-    public Page<BookDTO> getAllBooks(Pageable pageable) {
-        Page<Book> bookPage = bookRepository.findAll(pageable);
-        List<BookDTO> bookDTOs = bookMapper.toDTOs(bookPage.getContent());
-        return new PageImpl<>(bookDTOs, pageable, bookPage.getTotalElements());
-    }
-
     public BookDTO getBookById(Long id) {
         Book book = bookRepository.findById(id).orElse(null);
         return bookMapper.toDTO(book);
-    }
-
-    public BookDTO saveBook(BookDTO bookDTO) {
-        Book book = bookMapper.toEntity(bookDTO);
-        Book savedBook = bookRepository.save(book);
-        return bookMapper.toDTO(savedBook);
-    }
-
-    public void deleteBook(Long id) {
-        bookRepository.deleteById(id);
     }
 
     public Page<BookDTO> getBooksByFilter(String title, String brand, Integer year, Pageable pageable) {
@@ -48,5 +32,23 @@ public class BookService {
         List<BookDTO> bookDTOs = bookMapper.toDTOs(bookPage.getContent());
         return new PageImpl<>(bookDTOs, pageable, bookPage.getTotalElements());
     }
+
+    public BookDTO createBook(BookDTO bookDTO) {
+        Book book = bookMapper.toEntity(bookDTO);
+        Book savedBook = bookRepository.save(book);
+        return bookMapper.toDTO(savedBook);
+    }
+
+    public BookDTO updateBook(Long id, BookDTO bookDTO) {
+        Book book = bookMapper.toEntity(bookDTO);
+        book.setId(id);
+        Book updatedBook = bookRepository.save(book);
+        return bookMapper.toDTO(updatedBook);
+    }
+
+    public void deleteBook(Long id) {
+        bookRepository.deleteById(id);
+    }
+
 }
 

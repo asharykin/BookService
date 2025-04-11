@@ -18,40 +18,38 @@ public class BookRestController {
     private final BookService bookService;
 
     @GetMapping
-    public Page<BookDTO> getBooks(
+    public ResponseEntity<Page<BookDTO>> getBooks(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "title", required = false) String title,
             @RequestParam(name = "brand", required = false) String brand,
             @RequestParam(name = "year", required = false) Integer year) {
         Pageable pageable = PageRequest.of(page, size);
-        return bookService.getBooksByFilter(title, brand, year, pageable);
+        Page<BookDTO> bookDTOs = bookService.getBooksByFilter(title, brand, year, pageable);
+        return new ResponseEntity<>(bookDTOs, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
-        BookDTO createdBook = bookService.saveBook(bookDTO);
-        return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
+        BookDTO createdBookDTO = bookService.createBook(bookDTO);
+        return new ResponseEntity<>(createdBookDTO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BookDTO> updateBook(@PathVariable Long id, @RequestBody BookDTO bookDTO) {
-        BookDTO existingBook = bookService.getBookById(id);
-        if (existingBook == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (bookService.getBookById(id) != null) {
+            BookDTO updatedBookDTO = bookService.updateBook(id, bookDTO);
+            return new ResponseEntity<>(updatedBookDTO, HttpStatus.OK);
         }
-        bookDTO.setId(id);
-        BookDTO updatedBook = bookService.saveBook(bookDTO);
-        return ResponseEntity.ok(updatedBook);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-        BookDTO existingBook = bookService.getBookById(id);
-        if (existingBook == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (bookService.getBookById(id) != null) {
+            bookService.deleteBook(id);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        bookService.deleteBook(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }

@@ -2,6 +2,7 @@ package ru.knigoed.book.service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -19,8 +20,6 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/books/**").hasAnyRole("USER", "ADMIN")
-                    .requestMatchers("/api/books").hasAnyRole("USER", "ADMIN")
                     .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -37,13 +36,11 @@ public class SecurityConfig {
                 .password("user")
                 .roles("USER")
                 .build();
-
         UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
                 .password("admin")
                 .roles("ADMIN")
                 .build();
-
         return new InMemoryUserDetailsManager(user, admin);
     }
 }
