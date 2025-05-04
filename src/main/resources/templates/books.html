@@ -9,7 +9,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="container" id="mainContainer">
     <h1 class="mt-2">Book List <a href="/logout" class="btn btn-danger ml-2 mb-2">Logout</a></h1>
 
     <div class="form-row mb-3">
@@ -36,11 +36,8 @@
         </div>
     </div>
 
-    <button type="button" class="btn btn-success mb-3" id="addBookButton" onclick="openAddModal()">Add Book</button>
-
-    <table class="table">
-        <thead>
-        <tr></tr>
+    <table class="table" id="bookTable">
+        <thead id="bookTableHead">
         </thead>
         <tbody id="bookTableBody">
         </tbody>

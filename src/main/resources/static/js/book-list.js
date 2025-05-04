@@ -1,12 +1,9 @@
 var currentPage = 0;
 var pageSize = 10;
-var titleFilter = "";
-var brandFilter = "";
-var yearFilter = "";
 var userRoles = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-    loadUserRoles();
+    renderBasedOnRoles();
     loadBooks();
 
     document.getElementById("bookForm").addEventListener("submit", function (event) {
@@ -15,35 +12,57 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-async function loadUserRoles() {
+async function renderBasedOnRoles() {
     const response = await fetch("/roles");
     userRoles = await response.json();
-    updateUIBasedOnRole();
-}
 
-function updateUIBasedOnRole() {
     const isAdmin = userRoles.includes("ROLE_ADMIN");
-    const addBookButton = document.getElementById("addBookButton");
-    if (addBookButton) {
-        addBookButton.style.display = isAdmin ? "block" : "none";
+
+    if (isAdmin) {
+        let addBookButton = document.createElement("button");
+        addBookButton.type = "button";
+        addBookButton.className = "btn btn-success mb-3";
+        addBookButton.id = "addBookButton";
+        addBookButton.textContent = "Add Book";
+        addBookButton.onclick = openAddModal;
+
+        let container = document.getElementById("mainContainer");
+        container.insertBefore(addBookButton, document.getElementById("bookTable"));
     }
+
+    let tableHeader = document.getElementById("bookTableHead");
+    tableHeader.innerHTML = "";
+
+    let row = document.createElement("tr");
+    let headers = ["ID", "Vendor Code", "Title", "Year", "Brand", "Stock", "Price"];
+
+    headers.forEach(headerText => {
+        let th = document.createElement("th");
+        th.textContent = headerText;
+        row.appendChild(th);
+    });
+
+    if (isAdmin) {
+        let actions = document.createElement("th");
+        actions.textContent = "Actions";
+        row.appendChild(actions);
+    }
+
+    tableHeader.appendChild(row);
 }
 
 function applyFilters() {
-    titleFilter = document.getElementById("titleFilter").value;
-    brandFilter = document.getElementById("brandFilter").value;
-    yearFilter = document.getElementById("yearFilter").value;
+    let titleFilter = document.getElementById("titleFilter").value;
+    let brandFilter = document.getElementById("brandFilter").value;
+    let yearFilter = document.getElementById("yearFilter").value;
     currentPage = 0;
-    loadBooks();
+    loadBooks(titleFilter, brandFilter, yearFilter);
 }
 
 function clearFilters() {
     document.getElementById("titleFilter").value = "";
     document.getElementById("brandFilter").value = "";
     document.getElementById("yearFilter").value = "";
-    titleFilter = "";
-    brandFilter = "";
-    yearFilter = "";
     currentPage = 0;
     loadBooks();
 }
@@ -51,11 +70,14 @@ function clearFilters() {
 function changePageSize() {
     pageSize = parseInt(document.getElementById("pageSizeSelect").value, 10);
     currentPage = 0;
-    loadBooks();
+    let titleFilter = document.getElementById("titleFilter").value;
+    let brandFilter = document.getElementById("brandFilter").value;
+    let yearFilter = document.getElementById("yearFilter").value;
+    loadBooks(titleFilter, brandFilter, yearFilter);
 }
 
-async function loadBooks() {
-    var url = "/api/books?page=" + currentPage + "&size=" + pageSize;
+async function loadBooks(titleFilter, brandFilter, yearFilter) {
+    let url = "/api/books?page=" + currentPage + "&size=" + pageSize;
     if (titleFilter) {
         url += "&title=" + titleFilter;
     }
@@ -73,27 +95,8 @@ async function loadBooks() {
 }
 
 function populateTable(books) {
-    var tableBody = document.getElementById("bookTableBody");
+    let tableBody = document.getElementById("bookTableBody");
     tableBody.innerHTML = "";
-
-    const isAdmin = userRoles.includes("ROLE_ADMIN");
-
-    let tableHeader = document.querySelector("table thead tr");
-    tableHeader.innerHTML = "";
-
-    let headers = ["ID", "Vendor Code", "Title", "Year", "Brand", "Stock", "Price"];
-
-    headers.forEach(headerText => {
-        let th = document.createElement("th");
-        th.textContent = headerText;
-        tableHeader.appendChild(th);
-    });
-
-    if (isAdmin) {
-        let actionsHeader = document.createElement("th");
-        actionsHeader.textContent = "Actions";
-        tableHeader.appendChild(actionsHeader);
-    }
 
     for (let i = 0; i < books.length; i++) {
         let book = books[i];
@@ -127,6 +130,7 @@ function populateTable(books) {
         priceCell.textContent = book.price;
         row.appendChild(priceCell);
 
+        const isAdmin = userRoles.includes("ROLE_ADMIN");
         if (isAdmin) {
             let actionsCell = document.createElement("td");
             let editButton = createButton("Edit", "btn-primary", (function (currentBook) {
@@ -151,7 +155,7 @@ function populateTable(books) {
 }
 
 function createButton(text, className, clickHandler) {
-    var button = document.createElement("button");
+    let button = document.createElement("button");
     button.textContent = text;
     button.className = "btn " + className + " btn-sm ml-1";
     button.addEventListener("click", clickHandler);
@@ -159,12 +163,12 @@ function createButton(text, className, clickHandler) {
 }
 
 function populatePagination(totalPages, currentPage) {
-    var pagination = document.getElementById("pagination");
+    let pagination = document.getElementById("pagination");
     pagination.innerHTML = "";
 
-    var prevItem = document.createElement("li");
+    let prevItem = document.createElement("li");
     prevItem.className = "page-item";
-    var prevLink = document.createElement("a");
+    let prevLink = document.createElement("a");
     prevLink.className = "page-link";
     prevLink.textContent = "Previous";
     prevLink.href = "#";
@@ -181,10 +185,10 @@ function populatePagination(totalPages, currentPage) {
     prevItem.appendChild(prevLink);
     pagination.appendChild(prevItem);
 
-    for (var i = 0; i < totalPages; i++) {
-        var pageItem = document.createElement("li");
+    for (let i = 0; i < totalPages; i++) {
+        let pageItem = document.createElement("li");
         pageItem.className = "page-item";
-        var pageLink = document.createElement("a");
+        let pageLink = document.createElement("a");
         pageLink.className = "page-link";
         pageLink.textContent = (i + 1);
         pageLink.href = "#";
@@ -204,9 +208,9 @@ function populatePagination(totalPages, currentPage) {
         pagination.appendChild(pageItem);
     }
 
-    var nextItem = document.createElement("li");
+    let nextItem = document.createElement("li");
     nextItem.className = "page-item";
-    var nextLink = document.createElement("a");
+    let nextLink = document.createElement("a");
     nextLink.className = "page-link";
     nextLink.textContent = "Next";
     nextLink.href = "#";
@@ -226,19 +230,22 @@ function populatePagination(totalPages, currentPage) {
 
 function goToPage(page) {
     currentPage = page;
-    loadBooks();
+    let titleFilter = document.getElementById("titleFilter").value;
+    let brandFilter = document.getElementById("brandFilter").value;
+    let yearFilter = document.getElementById("yearFilter").value;
+    loadBooks(titleFilter, brandFilter, yearFilter);
 }
 
 async function saveBook() {
-    var id = document.getElementById("id").value;
-    var vendorCode = document.getElementById("vendorCode").value;
-    var title = document.getElementById("bookTitle").value;
-    var year = document.getElementById("year").value;
-    var brand = document.getElementById("brand").value;
-    var stock = document.getElementById("stock").value;
-    var price = document.getElementById("price").value;
+    let id = document.getElementById("id").value;
+    let vendorCode = document.getElementById("vendorCode").value;
+    let title = document.getElementById("bookTitle").value;
+    let year = document.getElementById("year").value;
+    let brand = document.getElementById("brand").value;
+    let stock = document.getElementById("stock").value;
+    let price = document.getElementById("price").value;
 
-    var bookData = {
+    let bookData = {
         vendorCode: vendorCode,
         title: title,
         year: year,
@@ -247,9 +254,8 @@ async function saveBook() {
         price: price
     };
 
-    var method = 'POST';
-    var url = '/api/books';
-
+    let method = 'POST';
+    let url = '/api/books';
     if (id) {
         method = 'PUT';
         url += '/' + id;
@@ -262,7 +268,6 @@ async function saveBook() {
         },
         body: JSON.stringify(bookData)
     });
-
     if (response.ok) {
         closeModal();
         loadBooks();
@@ -277,7 +282,6 @@ async function deleteBook(id) {
                 'Content-Type': 'application/json'
             }
         });
-
         if (response.ok) {
             loadBooks();
         }
