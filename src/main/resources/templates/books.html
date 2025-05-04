@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Book List</title>
@@ -10,7 +10,7 @@
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-2">Book List <a th:href="@{/logout}" class="btn btn-danger ml-2 mb-2">Logout</a></h1>
+    <h1 class="mt-2">Book List <a href="/logout" class="btn btn-danger ml-2 mb-2">Logout</a></h1>
 
     <div class="form-row mb-3">
         <div class="col">
@@ -40,16 +40,7 @@
 
     <table class="table">
         <thead>
-        <tr>
-            <th>ID</th>
-            <th>Vendor Code</th>
-            <th>Title</th>
-            <th>Year</th>
-            <th>Brand</th>
-            <th>Stock</th>
-            <th>Price</th>
-            <th th:if="${userRoles.contains('ROLE_ADMIN')}">Actions</th>
-        </tr>
+        <tr></tr>
         </thead>
         <tbody id="bookTableBody">
         </tbody>
@@ -103,12 +94,6 @@
         </div>
     </div>
 </div>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    var userRoles = /*[[${userRoles}]]*/ [];
-    /*]]>*/
-</script>
 
 <script src="static/js/book-list.js"></script>
 </body>

@@ -9,7 +9,7 @@
 - Spring Security
 - MapStruct
 - PostgreSQL
-- HTML, Bootstrap, Thymeleaf
+- HTML, Bootstrap
 - JavaScript
 - Docker
 

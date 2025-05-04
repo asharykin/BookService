@@ -3,21 +3,31 @@ var pageSize = 10;
 var titleFilter = "";
 var brandFilter = "";
 var yearFilter = "";
+var userRoles = [];
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    loadUserRoles();
     loadBooks();
 
-    document.getElementById("bookForm").addEventListener("submit", function(event) {
+    document.getElementById("bookForm").addEventListener("submit", function (event) {
         event.preventDefault();
         saveBook();
     });
-
-    if (userRoles.includes("ROLE_ADMIN")) {
-        document.getElementById("addBookButton").style.display = "block";
-    } else {
-        document.getElementById("addBookButton").style.display = "none";
-    }
 });
+
+async function loadUserRoles() {
+    const response = await fetch("/roles");
+    userRoles = await response.json();
+    updateUIBasedOnRole();
+}
+
+function updateUIBasedOnRole() {
+    const isAdmin = userRoles.includes("ROLE_ADMIN");
+    const addBookButton = document.getElementById("addBookButton");
+    if (addBookButton) {
+        addBookButton.style.display = isAdmin ? "block" : "none";
+    }
+}
 
 function applyFilters() {
     titleFilter = document.getElementById("titleFilter").value;
@@ -56,19 +66,34 @@ async function loadBooks() {
         url += "&year=" + yearFilter;
     }
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        populateTable(data.content);
-        populatePagination(data.totalPages, data.number);
-    } catch (error) {
-        console.error("Error fetching data:", error);
-    }
+    const response = await fetch(url);
+    const data = await response.json();
+    populateTable(data.content);
+    populatePagination(data.totalPages, data.number);
 }
 
 function populateTable(books) {
     var tableBody = document.getElementById("bookTableBody");
     tableBody.innerHTML = "";
+
+    const isAdmin = userRoles.includes("ROLE_ADMIN");
+
+    let tableHeader = document.querySelector("table thead tr");
+    tableHeader.innerHTML = "";
+
+    let headers = ["ID", "Vendor Code", "Title", "Year", "Brand", "Stock", "Price"];
+
+    headers.forEach(headerText => {
+        let th = document.createElement("th");
+        th.textContent = headerText;
+        tableHeader.appendChild(th);
+    });
+
+    if (isAdmin) {
+        let actionsHeader = document.createElement("th");
+        actionsHeader.textContent = "Actions";
+        tableHeader.appendChild(actionsHeader);
+    }
 
     for (let i = 0; i < books.length; i++) {
         let book = books[i];
@@ -102,17 +127,16 @@ function populateTable(books) {
         priceCell.textContent = book.price;
         row.appendChild(priceCell);
 
-        if (userRoles.includes("ROLE_ADMIN")) {
+        if (isAdmin) {
             let actionsCell = document.createElement("td");
-
-            let editButton = createButton("Edit", "btn-primary", (function(currentBook) {
-                return function() {
+            let editButton = createButton("Edit", "btn-primary", (function (currentBook) {
+                return function () {
                     openEditModal(currentBook);
                 };
             })(book));
 
-            let deleteButton = createButton("Delete", "btn-danger", (function(currentBook) {
-                return function() {
+            let deleteButton = createButton("Delete", "btn-danger", (function (currentBook) {
+                return function () {
                     deleteBook(currentBook.id);
                 };
             })(book));
@@ -125,7 +149,6 @@ function populateTable(books) {
         tableBody.appendChild(row);
     }
 }
-
 
 function createButton(text, className, clickHandler) {
     var button = document.createElement("button");
@@ -149,7 +172,7 @@ function populatePagination(totalPages, currentPage) {
     if (currentPage === 0) {
         prevItem.classList.add("disabled");
     } else {
-        prevLink.addEventListener("click", function(e) {
+        prevLink.addEventListener("click", function (e) {
             e.preventDefault();
             goToPage(currentPage - 1);
         });
@@ -169,8 +192,8 @@ function populatePagination(totalPages, currentPage) {
         if (i === currentPage) {
             pageItem.classList.add("active");
         } else {
-            (function(pageNum) {
-                pageLink.addEventListener("click", function(e) {
+            (function (pageNum) {
+                pageLink.addEventListener("click", function (e) {
                     e.preventDefault();
                     goToPage(pageNum);
                 });
@@ -191,7 +214,7 @@ function populatePagination(totalPages, currentPage) {
     if (currentPage === totalPages - 1) {
         nextItem.classList.add("disabled");
     } else {
-        nextLink.addEventListener("click", function(e) {
+        nextLink.addEventListener("click", function (e) {
             e.preventDefault();
             goToPage(currentPage + 1);
         });
@@ -232,43 +255,31 @@ async function saveBook() {
         url += '/' + id;
     }
 
-    try {
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(bookData)
-        });
+    const response = await fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookData)
+    });
 
-        if (response.ok) {
-            closeModal();
-            loadBooks();
-        } else {
-            console.error('Error saving book:', response.status);
-        }
-    } catch (error) {
-        console.error('Error saving book:', error);
+    if (response.ok) {
+        closeModal();
+        loadBooks();
     }
 }
 
 async function deleteBook(id) {
-    if (confirm("Are you sure you want to delete this book?")) {
-        try {
-            const response = await fetch('/api/books/' + id, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                loadBooks();
-            } else {
-                console.error('Error deleting book:', response.status);
+    if (confirm("Вы уверены, что хотите удалить эту книгу?")) {
+        const response = await fetch('/api/books/' + id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            console.error('Error deleting book:', error);
+        });
+
+        if (response.ok) {
+            loadBooks();
         }
     }
 }
